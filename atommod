@@ -1,0 +1,45 @@
+elements.atombomb = {
+    color: ["#555555", "#888888", "#aaaaaa"],
+    behavior: behaviors.SOLID,
+    category: "weapons",
+    state: "solid",
+    density: 2000,
+    reactions: {
+        "fire": { elem1: null, elem2: null, chance: 1, func: function(pixel) { explodeNuke(pixel); } },
+        "explosion": { elem1: null, elem2: null, chance: 1, func: function(pixel) { explodeNuke(pixel); } },
+    },
+};
+
+function explodeNuke(pixel) {
+    if (pixel.exploded) return;
+    pixel.exploded = true;
+
+    const radius = 50;
+    const heat = 10000;
+    const blastPower = 200;
+
+    // Großflächige Explosion
+    explodeAt(pixel.x, pixel.y, blastPower);
+
+    // Hitze und Plasma im Umkreis
+    for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+            let x = pixel.x + dx;
+            let y = pixel.y + dy;
+            if (!isEmpty(x, y) && Math.hypot(dx, dy) <= radius) {
+                let p = currentPixels[x]?.[y];
+                if (p) {
+                    p.temp += heat;
+                    if (Math.random() < 0.2) {
+                        changePixel(x, y, "plasma");
+                    } else if (Math.random() < 0.5) {
+                        changePixel(x, y, "fire");
+                    }
+                }
+            }
+        }
+    }
+
+    // Atom­bombe selbst löschen
+    deletePixel(pixel.x, pixel.y);
+}
